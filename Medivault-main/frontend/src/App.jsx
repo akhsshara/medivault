@@ -9,23 +9,11 @@ import {
 } from 'lucide-react'
 import { apiRequest, apiUrl, fromApiGrant, fromApiRecord, mapCategoryToApi } from './api.js'
 
-const initialRecords = [
-  { id: 'MV-240628', title: 'Complete blood count', type: 'Lab report', date: '28 Jun 2026', dateSort: '2026-06-28', source: 'Dr. Lal PathLabs', sourceType: 'verified', doctor: 'Dr. R. Kulkarni', detail: 'Routine health check', color: 'mint', icon: 'lab' },
-  { id: 'MV-240619', title: 'Prescription', type: 'Prescription', date: '19 Jun 2026', dateSort: '2026-06-19', source: 'Sahyadri Hospital', sourceType: 'verified', doctor: 'Dr. Meera Joshi', detail: 'Follow-up · Internal medicine', color: 'lavender', icon: 'rx' },
-  { id: 'MV-240612', title: 'Chest X-ray', type: 'Scan', date: '12 Jun 2026', dateSort: '2026-06-12', source: 'Deenanath Mangeshkar Hospital', sourceType: 'verified', doctor: 'Radiology department', detail: 'Imaging · PA view', color: 'blue', icon: 'scan' },
-  { id: 'MV-240605', title: 'Annual health check-up', type: 'Diagnosis', date: '05 Jun 2026', dateSort: '2026-06-05', source: 'Ruby Hall Clinic', sourceType: 'verified', doctor: 'Dr. A. Shah', detail: 'General medicine', color: 'peach', icon: 'heart' },
-  { id: 'MV-240520', title: 'Prescription', type: 'Prescription', date: '20 May 2026', dateSort: '2026-05-20', source: 'Sahyadri Hospital', sourceType: 'verified', doctor: 'Dr. Meera Joshi', detail: 'Consultation · Internal medicine', color: 'lavender', icon: 'rx' },
-  { id: 'MV-240505', title: 'Lipid profile', type: 'Lab report', date: '05 May 2026', dateSort: '2026-05-05', source: 'Dr. Lal PathLabs', sourceType: 'verified', doctor: 'Dr. R. Kulkarni', detail: 'Preventive care', color: 'mint', icon: 'lab' },
-  { id: 'MV-240421', title: 'Discharge summary', type: 'Discharge summary', date: '21 Apr 2026', dateSort: '2026-04-21', source: 'Sahyadri Hospital', sourceType: 'verified', doctor: 'Dr. N. Patil', detail: 'Inpatient · Orthopaedics', color: 'peach', icon: 'file' },
-  { id: 'MV-240318', title: 'MRI lumbar spine', type: 'Scan', date: '18 Mar 2026', dateSort: '2026-03-18', source: 'Deenanath Mangeshkar Hospital', sourceType: 'verified', doctor: 'Radiology department', detail: 'Imaging · Lumbar spine', color: 'blue', icon: 'scan' },
-  { id: 'MV-240225', title: 'Blood glucose report', type: 'Lab report', date: '25 Feb 2026', dateSort: '2026-02-25', source: 'Patient upload', sourceType: 'personal', doctor: '', detail: 'Added by you', color: 'mint', icon: 'lab' },
-]
+// Medical records are always loaded from the signed-in user's API account.
+// Keep demo provider choices for trying the sharing flow, but don't seed fake records.
+const initialRecords = []
 
-const initialShares = [
-  { id: 1, hospital: 'MediVault Demo Clinic', doctor: 'Sample care team', initials: 'DC', tint: 'sage', expires: '12 Nov 2026', access: 'Lab reports', active: true, isDemo: true },
-  { id: 2, hospital: 'MediVault Demo Diagnostics', doctor: 'Sample diagnostics team', initials: 'DD', tint: 'rose', expires: '02 Nov 2026', access: 'All records', active: true, isDemo: true },
-  { id: 3, hospital: 'MediVault Demo Imaging Centre', doctor: 'Sample imaging team', initials: 'DI', tint: 'blue', expires: '18 Sep 2026', access: 'Imaging records', active: false, isDemo: true },
-]
+const initialShares = []
 
 const initialOrganizations = [
   { id: null, name: 'MediVault Demo Clinic', doctor: 'Sample care team', initials: 'DC', tint: 'sage', isDemo: true },
@@ -138,6 +126,10 @@ export default function App() {
     }
     const account = { ...user, organization }
     setSession(account)
+    setRecords([])
+    setTimelineRecords([])
+    setRecordTotal(0)
+    setShares([])
     setDemoMode(false)
     const nextRole = user.role === 'patient' ? 'Patient portal' : user.role === 'hospital_staff' ? 'Provider portal' : 'Admin console'
     setRole(nextRole)
