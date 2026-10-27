@@ -7,7 +7,7 @@ import {
   Shield, ShieldCheck, Share2, SlidersHorizontal, Sparkles, Stethoscope, Upload,
   UserRound, Users, X, Eye, EyeOff, ClipboardList, Building2, BadgeCheck, Trash2,
 } from 'lucide-react'
-import { apiRequest, fromApiGrant, fromApiRecord, mapCategoryToApi } from './api.js'
+import { apiRequest, apiUrl, fromApiGrant, fromApiRecord, mapCategoryToApi } from './api.js'
 
 const initialRecords = [
   { id: 'MV-240628', title: 'Complete blood count', type: 'Lab report', date: '28 Jun 2026', dateSort: '2026-06-28', source: 'Dr. Lal PathLabs', sourceType: 'verified', doctor: 'Dr. R. Kulkarni', detail: 'Routine health check', color: 'mint', icon: 'lab' },
@@ -455,7 +455,7 @@ export default function App() {
 
     {modal === 'record' && selectedRecord && <Modal eyebrow={selectedRecord.type.toUpperCase()} title={selectedRecord.title} onClose={() => setModal(null)} width="620px">
       <div className="detail-source"><RecordIcon record={selectedRecord} size={22} /><div><strong>{selectedRecord.source}</strong><span>{selectedRecord.doctor || selectedRecord.detail} · {selectedRecord.date}</span></div><span className={`source-badge ${selectedRecord.sourceType}`}>{selectedRecord.sourceType === 'verified' ? <><BadgeCheck size={13} />Verified source</> : <><UserRound size={13} />Your upload</>}</span></div>
-      {session ? <div className="live-document-preview">{selectedRecord.mimeType?.startsWith('image/') ? <img src={`/api/records/${selectedRecord.id}/file`} alt={`Preview of ${selectedRecord.title}`} /> : <iframe src={`/api/records/${selectedRecord.id}/file`} title={`Preview of ${selectedRecord.title}`} />}</div> : <div className="detail-demo"><Sparkles size={17} /><div><strong>Sample record</strong><p>This demonstration uses synthetic health record metadata only. No clinical document is attached to this sample.</p></div></div>}
+      {session ? <div className="live-document-preview">{selectedRecord.mimeType?.startsWith('image/') ? <img src={apiUrl(`/records/${selectedRecord.id}/file`)} alt={`Preview of ${selectedRecord.title}`} /> : <iframe src={apiUrl(`/records/${selectedRecord.id}/file`)} title={`Preview of ${selectedRecord.title}`} />}</div> : <div className="detail-demo"><Sparkles size={17} /><div><strong>Sample record</strong><p>This demonstration uses synthetic health record metadata only. No clinical document is attached to this sample.</p></div></div>}
       <div className="detail-meta"><div><span>RECORD ID</span><strong>{selectedRecord.id}</strong></div><div><span>DOCUMENT TYPE</span><strong>{selectedRecord.type}</strong></div><div><span>VISIT / DOCUMENT DATE</span><strong>{selectedRecord.date}</strong></div><div><span>ADDED TO MEDIVAULT</span><strong>{selectedRecord.date}</strong></div></div>
       <div className="modal-actions detail-actions">{session && <button className="button secondary" onClick={async () => { const reason = window.prompt('Tell us what needs correcting. This request goes to the MediVault support team.'); if (!reason) return; try { await apiRequest(`/records/${selectedRecord.id}/correction-requests`, { method: 'POST', body: { reason } }); announce('Correction request submitted'); } catch (error) { announce(error.message) } }}><ClipboardList size={16} />Request correction</button>}<button className="button secondary" onClick={() => { setModal(null); setModal('share') }}><Share2 size={16} />Share access</button><button className="button primary" onClick={() => saveDownload(selectedRecord)}><Download size={16} />{session ? 'Download document' : 'Download sample'}</button></div>
     </Modal>}

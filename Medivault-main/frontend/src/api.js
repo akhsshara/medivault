@@ -6,6 +6,14 @@ const apiCategory = {
   discharge_summary: ['Discharge summary', 'peach', 'file'],
 }
 
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://medivault-0elz.onrender.com/api'
+  : '/api'
+
+export function apiUrl(path) {
+  return `${API_BASE_URL}${path}`
+}
+
 export async function apiRequest(path, options = {}) {
   const headers = new Headers(options.headers || {})
   let body = options.body
@@ -13,7 +21,7 @@ export async function apiRequest(path, options = {}) {
     headers.set('Content-Type', 'application/json')
     body = JSON.stringify(body)
   }
-  const response = await fetch(`/api${path}`, { ...options, body, headers, credentials: 'include' })
+  const response = await fetch(apiUrl(path), { ...options, body, headers, credentials: 'include' })
   const contentType = response.headers.get('content-type') || ''
   const result = contentType.includes('application/json') ? await response.json() : await response.blob()
   if (!response.ok) throw new Error(result?.error || 'The request could not be completed')

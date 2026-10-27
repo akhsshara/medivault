@@ -65,7 +65,7 @@ primaryOrigin,
 const invalidOrigin = configuredOrigins.find((origin) => {
 try {
 const url = new URL(origin);
-return !['http:', 'https:'].includes(url.protocol) || url.origin !== origin;
+return !['http:', 'https:'].includes(url.protocol) || !['', '/'].includes(url.pathname) || Boolean(url.search || url.hash || url.username || url.password);
 } catch {
 return true;
 }
@@ -77,6 +77,7 @@ process.exit(1);
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const storagePath = path.resolve(dirname, '..', parsed.data.STORAGE_PATH);
+const normalizedOrigins = [...new Set(configuredOrigins.map((origin) => new URL(origin).origin))];
 
 const mailConfigured = Boolean(
 parsed.data.SMTP_HOST &&
@@ -86,8 +87,8 @@ parsed.data.SMTP_PASS
 
 export const config = {
 ...parsed.data,
-APP_ORIGIN: primaryOrigin,
-allowedOrigins: [...new Set(configuredOrigins)],
+APP_ORIGIN: normalizedOrigins[0],
+allowedOrigins: normalizedOrigins,
 storagePath,
 mailConfigured,
 production: parsed.data.NODE_ENV === 'production',
