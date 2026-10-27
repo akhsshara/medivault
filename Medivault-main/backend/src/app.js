@@ -6,6 +6,7 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
+import { connectDatabase } from './db.js'
 import { authenticate, requireRequestOrigin } from './middleware.js'
 import authRouter from './routes/auth.js'
 import recordsRouter, { hospitalRecordsRouter } from './routes/records.js'
@@ -37,6 +38,9 @@ app.use(cors({ origin: config.allowedOrigins, credentials: true, methods: ['GET'
 app.use(express.json({ limit: '32kb' }))
 app.use(cookieParser())
 app.use(requireRequestOrigin)
+app.use((_req, _res, next) => {
+  connectDatabase().then(() => next()).catch(next)
+})
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 app.use('/api/auth', authLimiter, authRouter)

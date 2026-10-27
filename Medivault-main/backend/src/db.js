@@ -7,6 +7,7 @@ const demoOrganizations = [
   { name: 'MediVault Demo Diagnostics', type: 'diagnostic_centre' },
   { name: 'MediVault Demo Imaging Centre', type: 'hospital' },
 ]
+let connectionPromise
 
 async function seedDemoOrganizations() {
   if (config.NODE_ENV !== 'development') return
@@ -20,8 +21,18 @@ async function seedDemoOrganizations() {
 }
 
 export async function connectDatabase() {
-  mongoose.set('strictQuery', true)
-  await mongoose.connect(config.MONGO_URI)
-  console.info('Connected to MongoDB')
-  await seedDemoOrganizations()
+  if (mongoose.connection.readyState === 1) return
+  if (!connectionPromise || mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+    mongoose.set('strictQuery', true)
+    connectionPromise = mongoose.connect(config.MONGO_URI)
+      .then(async () => {
+        console.info('Connected to MongoDB')
+        await seedDemoOrganizations()
+      })
+      .catch((error) => {
+        connectionPromise = undefined
+        throw error
+      })
+  }
+  await connectionPromise
 }

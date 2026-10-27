@@ -36,6 +36,12 @@ To preview the synthetic interface without MongoDB, run `npm run dev:frontend` a
 
 Password recovery sends an email only when all SMTP settings in `backend/.env` are configured. Until then, the endpoint returns a neutral response and does not expose account existence.
 
+## Deploy to Vercel
+
+The root `vercel.json` deploys `frontend/` and `backend/` as Vercel Services and routes `/api/*` to the Express service. Vercel Services are currently in beta. Import the repository from its root directory, then add `MONGO_URI`, `JWT_SECRET`, and `STORAGE_ENCRYPTION_KEY` to the backend service's environment. Vercel deployment URLs are added to the origin allowlist automatically; for a custom domain, set `APP_ORIGIN` and `APP_ALLOWED_ORIGINS` to that exact HTTPS origin.
+
+This deployment setup does not make local-disk medical-file storage production-ready. Vercel Functions have a 4.5 MB request/response body limit, and their local filesystem is not durable between invocations. Use private object storage and direct uploads before relying on document uploads or storing real patient records.
+
 ## Create an administrator
 
 Create the first administrator from a protected terminal after setting the database environment and the three admin values. Use a unique password of at least 16 characters. The script does not print or return the password.

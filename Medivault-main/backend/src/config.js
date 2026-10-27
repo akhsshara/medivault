@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 const envSchema = z.object({
-NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+NODE_ENV: z.enum(['development', 'test', 'production']).default(process.env.VERCEL ? 'production' : 'development'),
 PORT: z.coerce.number().int().positive().default(4000),
-APP_ORIGIN: z.string().url().default('http://localhost:5173'),
+APP_ORIGIN: z.string().url().optional(),
 APP_ALLOWED_ORIGINS: z.string().optional(),
 MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
 JWT_SECRET: z.string().min(32, 'JWT_SECRET must contain at least 32 characters'),
@@ -36,8 +36,27 @@ parsed.error.issues.map((issue) => issue.message).join('; ')
 process.exit(1);
 }
 
+const deploymentHosts = [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL].filter(Boolean)
+const vercelOrigins = deploymentHosts.map((host) => {
+try {
+return new URL(host).origin
+} catch {
+return new URL(`https://${host}`).origin
+}
+})
+const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL
+const currentHost = process.env.VERCEL_ENV === 'production'
+? productionHost
+: process.env.VERCEL_URL || productionHost
+const deploymentOrigin = currentHost
+? (() => {
+try { return new URL(currentHost).origin } catch { return new URL(`https://${currentHost}`).origin }
+})()
+: undefined
+const primaryOrigin = parsed.data.APP_ORIGIN || deploymentOrigin || 'http://localhost:5173'
 const configuredOrigins = [
-parsed.data.APP_ORIGIN,
+primaryOrigin,
+...vercelOrigins,
 ...(parsed.data.APP_ALLOWED_ORIGINS || '')
 .split(',')
 .map((origin) => origin.trim())
@@ -67,6 +86,7 @@ parsed.data.SMTP_PASS
 
 export const config = {
 ...parsed.data,
+APP_ORIGIN: primaryOrigin,
 allowedOrigins: [...new Set(configuredOrigins)],
 storagePath,
 mailConfigured,
