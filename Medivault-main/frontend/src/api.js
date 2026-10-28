@@ -6,9 +6,10 @@ const apiCategory = {
   discharge_summary: ['Discharge summary', 'peach', 'file'],
 }
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://medivault-0elz.onrender.com/api'
-  : '/api'
+// Requests are routed to /api on the same origin.
+// In development, Vite proxies /api to http://localhost:4000.
+// In production, the hosting platform rewrites /api to the backend.
+const API_BASE_URL = '/api'
 
 export function apiUrl(path) {
   return `${API_BASE_URL}${path}`

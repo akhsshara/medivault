@@ -12,7 +12,7 @@ export function signSession(userId, sessionVersion = 0) {
 }
 
 export function sessionCookieOptions() {
-  return { httpOnly: true, secure: config.production, sameSite: 'strict', path: '/api', maxAge: 12 * 60 * 60 * 1000 }
+  return { httpOnly: true, secure: config.production, sameSite: config.production ? 'strict' : 'lax', path: '/api', maxAge: 12 * 60 * 60 * 1000 }
 }
 
 export function hashToken(token) {

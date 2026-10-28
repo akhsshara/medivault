@@ -20,7 +20,7 @@ Requirements: Node.js 20.19+ or 22.12+ and a reachable MongoDB instance.
 
 1. Create `backend/.env` locally. Environment files are intentionally excluded from this repository.
 2. Set `MONGO_URI` to a local or development MongoDB database. Add `JWT_SECRET` and `STORAGE_ENCRYPTION_KEY` as independent random secrets; never commit them.
-   Set `APP_ORIGIN` to the frontend URL used for recovery links. If you open the app from another address, add each exact frontend origin to the comma-separated `APP_ALLOWED_ORIGINS` setting (for example, a LAN IP on port 5173).
+   Set `APP_ORIGIN` to the frontend URL used for recovery links. Add the exact local frontend origins to `APP_ALLOWED_ORIGINS` (for example, `http://localhost:5173` and `http://localhost:5174`; add your LAN origin if you use one).
 
    ```powershell
    node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
@@ -30,7 +30,7 @@ Requirements: Node.js 20.19+ or 22.12+ and a reachable MongoDB instance.
    Use the first output for `JWT_SECRET` and the second for `STORAGE_ENCRYPTION_KEY`. The encryption key must be 64 hexadecimal characters.
 3. Install dependencies from the repository root with `npm install`.
 4. Start the client and API with `npm run dev`.
-5. Open `http://localhost:5173`. Register a patient account to use connected storage and consent flows. The API runs on port 4000 and Vite proxies `/api` to it.
+5. Open the Vite URL printed in the terminal (usually `http://localhost:5173`, or `http://localhost:5174` if 5173 is busy). In development, the frontend calls the local API at the same hostname on port 4000. Register or sign in there to use connected storage and consent flows; accounts need a working local MongoDB connection.
 
 To preview the synthetic interface without MongoDB, run `npm run dev:frontend` and open the same address. Account sign-in and connected features need the API environment above.
 
@@ -38,7 +38,7 @@ Password recovery sends an email only when all SMTP settings in `backend/.env` a
 
 ## Deploy to Vercel
 
-The root `vercel.json` deploys `frontend/` and `backend/` as Vercel Services and routes `/api/*` to the Express service. Vercel Services are currently in beta. Import the repository from its root directory, then add `MONGO_URI`, `JWT_SECRET`, and `STORAGE_ENCRYPTION_KEY` to the backend service's environment. Vercel deployment URLs are added to the origin allowlist automatically; for a custom domain, set `APP_ORIGIN` and `APP_ALLOWED_ORIGINS` to that exact HTTPS origin.
+The root `vercel.json` deploys the frontend on Vercel and proxies `/api/*` requests to `https://medivault-0elz.onrender.com/api/*`. The proxy keeps the session cookie on the Vercel site, where the browser can send it reliably. If the Render service URL changes, update the API rewrite in `vercel.json`. Set `APP_ORIGIN` on Render to the frontend URL and include that exact HTTPS origin in `APP_ALLOWED_ORIGINS` (for example, `https://medivault-rho.vercel.app`) so account-changing requests pass the API origin check. Keep `MONGO_URI`, `JWT_SECRET`, and `STORAGE_ENCRYPTION_KEY` configured on Render.
 
 This deployment setup does not make local-disk medical-file storage production-ready. Vercel Functions have a 4.5 MB request/response body limit, and their local filesystem is not durable between invocations. Use private object storage and direct uploads before relying on document uploads or storing real patient records.
 

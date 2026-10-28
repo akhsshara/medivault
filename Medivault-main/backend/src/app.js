@@ -17,7 +17,6 @@ import profileRouter from './routes/profile.js'
 
 const app = express()
 const dirname = path.dirname(fileURLToPath(import.meta.url))
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Too many account requests. Please try again later.' } })
 const uploadLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Upload limit reached. Please try again later.' } })
 
 app.disable('x-powered-by')
@@ -43,7 +42,7 @@ app.use((_req, _res, next) => {
 })
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
-app.use('/api/auth', authLimiter, authRouter)
+app.use('/api/auth', authRouter)
 app.use('/api/profile', authenticate, profileRouter)
 app.use('/api/records', uploadLimiter, authenticate, recordsRouter)
 app.use('/api/hospital', uploadLimiter, authenticate, hospitalRecordsRouter)

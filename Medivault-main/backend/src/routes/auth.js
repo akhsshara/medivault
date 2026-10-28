@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import express from 'express'
+import { rateLimit } from 'express-rate-limit'
 import nodemailer from 'nodemailer'
 import { z } from 'zod'
 import { config } from '../config.js'
@@ -9,12 +10,15 @@ import { asyncRoute, audit, hashToken, safeUser, sessionCookieOptions, signSessi
 import { authenticate } from '../middleware.js'
 
 const router = express.Router()
+// Apply the brute-force limiter only to credential/reset operations. Session
+// checks and logout are routine requests and should not consume login attempts.
+const authAttemptLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Too many account requests. Please try again later.' } })
 const registerSchema = z.object({ name: z.string().trim().min(2).max(120), email: z.string().trim().email().max(254), password: z.string().min(12).max(128) })
 const loginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(1).max(128) })
 const resetSchema = z.object({ token: z.string().min(40).max(200), password: z.string().min(12).max(128) })
 const resetTransport = config.mailConfigured ? nodemailer.createTransport({ host: config.SMTP_HOST, port: config.SMTP_PORT, secure: config.SMTP_SECURE === 'true', auth: { user: config.SMTP_USER, pass: config.SMTP_PASS } }) : null
 
-router.post('/register', asyncRoute(async (req, res) => {
+router.post('/register', authAttemptLimiter, asyncRoute(async (req, res) => {
   const parsed = registerSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Enter a name, valid email and password of at least 12 characters' })
   const email = parsed.data.email.toLowerCase()
@@ -26,7 +30,7 @@ router.post('/register', asyncRoute(async (req, res) => {
   res.status(201).json({ user: safeUser(user) })
 }))
 
-router.post('/login', asyncRoute(async (req, res) => {
+router.post('/login', authAttemptLimiter, asyncRoute(async (req, res) => {
   const parsed = loginSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Enter a valid email and password' })
   const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select('+passwordHash')
@@ -49,7 +53,7 @@ router.post('/logout', authenticate, asyncRoute(async (req, res) => {
 
 router.get('/me', authenticate, (req, res) => res.json({ user: safeUser(req.user), organization: req.membership ? { id: req.membership.organizationId._id, name: req.membership.organizationId.name, status: req.membership.organizationId.status, role: req.membership.role } : null }))
 
-router.post('/forgot-password', asyncRoute(async (req, res) => {
+router.post('/forgot-password', authAttemptLimiter, asyncRoute(async (req, res) => {
   const email = z.string().email().safeParse(req.body?.email)
   if (!email.success) return res.status(400).json({ error: 'Enter a valid email address' })
   const user = await User.findOne({ email: email.data.toLowerCase(), active: true })
@@ -70,7 +74,7 @@ router.post('/forgot-password', asyncRoute(async (req, res) => {
   res.status(202).json({ message: 'If an active account matches that address, password reset instructions will be sent.' })
 }))
 
-router.post('/reset-password', asyncRoute(async (req, res) => {
+router.post('/reset-password', authAttemptLimiter, asyncRoute(async (req, res) => {
   const parsed = resetSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Provide a valid reset token and a password of at least 12 characters' })
   const user = await User.findOne({ resetTokenHash: hashToken(parsed.data.token), resetExpiresAt: { $gt: new Date() }, active: true }).select('+resetTokenHash +resetExpiresAt +passwordHash')

@@ -22,7 +22,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/api/:path*", "destination": "https://medivault-0elz.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }
