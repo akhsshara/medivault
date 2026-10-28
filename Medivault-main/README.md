@@ -4,7 +4,7 @@ MediVault is a patient-centered medical record locker prototype for India. The r
 
 ## Demo video
 
-[Watch the MediVault walkthrough](assets/medivault-demo.mp4).
+[Watch the MediVault walkthrough](https://drive.google.com/file/d/17baZDkupBt3gu9Kp5Te5S2CjzsdA80oP/view?usp=sharing).
 
 ## What is implemented
 
