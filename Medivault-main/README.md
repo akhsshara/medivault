@@ -2,6 +2,10 @@
 
 MediVault is a patient-centered medical record locker prototype for India. The repository contains a React/Vite/Tailwind web app and an Express/Mongoose API. It includes a synthetic-data demo and a connected account path for local MVP development.
 
+## Demo video
+
+[Watch the MediVault walkthrough](assets/medivault-demo.mp4).
+
 ## What is implemented
 
 - Patient registration, sign-in, sign-out, password recovery, and secure account cookies.
